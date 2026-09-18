@@ -21,6 +21,128 @@ export interface Product {
 
 export const products: Product[] = [
   {
+    id: "diamond-solitaire-ring",
+    name: "Diamond Solitaire Ring",
+    shortDesc: "Timeless solitaire ring with a brilliant-cut diamond in 18K gold",
+    fullDesc:
+      "A classic symbol of eternal love, this diamond solitaire ring features a stunning brilliant-cut diamond set in a sleek 18K gold band. The minimalist design lets the diamond take center stage, with a precision-cut stone that maximizes brilliance and fire. Perfect for engagements or as a timeless addition to any jewelry collection.",
+    price: 65999,
+    originalPrice: 82999,
+    currency: "INR",
+    image:
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=750&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1515562141589-67f0d569b610?w=600&h=750&fit=crop",
+    ],
+    category: "Rings",
+    rating: 4.9,
+    reviewCount: 312,
+    sizes: ["12", "14", "16", "18"],
+    metalOptions: [
+      { label: "18K Yellow Gold", color: "#FFD700" },
+      { label: "18K White Gold", color: "#E8E8E8" },
+      { label: "18K Rose Gold", color: "#B76E79" },
+    ],
+    inStock: true,
+    sku: "AG-RNG-001",
+    features: [
+      "VS1 Clarity Diamond",
+      "G Color Grade",
+      "18K Gold Band",
+      "GIA Certified",
+      "Lifetime Warranty",
+    ],
+    specifications: [
+      { label: "Gemstone", value: "Natural Diamond" },
+      { label: "Metal", value: "18K Gold" },
+      { label: "Setting", value: "4-Prong Solitaire" },
+      { label: "Band Width", value: "2.5mm" },
+      { label: "Origin", value: "Thailand" },
+    ],
+  },
+  {
+    id: "ruby-eternity-ring",
+    name: "Ruby Eternity Ring",
+    shortDesc: "Full eternity band with natural rubies in 14K gold",
+    fullDesc:
+      "Symbolize everlasting love with this exquisite ruby eternity ring. A continuous circle of natural rubies is channel-set into a polished 14K gold band, creating a stunning display of color and brilliance from every angle. Each ruby is carefully matched for color and size, ensuring a seamless and luxurious look.",
+    price: 48999,
+    originalPrice: 61999,
+    currency: "INR",
+    image:
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=600&h=750&fit=crop",
+    ],
+    category: "Rings",
+    rating: 4.8,
+    reviewCount: 198,
+    sizes: ["12", "14", "16", "18", "20"],
+    metalOptions: [
+      { label: "14K Yellow Gold", color: "#FFD700" },
+      { label: "14K Rose Gold", color: "#B76E79" },
+    ],
+    inStock: true,
+    sku: "AG-RNG-002",
+    features: [
+      "Natural Rubies",
+      "Channel Setting",
+      "14K Gold Band",
+      "Comfort Fit",
+      "Certificate of Authenticity",
+    ],
+    specifications: [
+      { label: "Gemstone", value: "Natural Ruby" },
+      { label: "Metal", value: "14K Gold" },
+      { label: "Setting", value: "Channel" },
+      { label: "Band Width", value: "3mm" },
+      { label: "Origin", value: "Thailand" },
+    ],
+  },
+  {
+    id: "sapphire-halo-ring",
+    name: "Sapphire Halo Ring",
+    shortDesc: "Blue sapphire surrounded by diamond halo in platinum",
+    fullDesc:
+      "A breathtaking centerpiece, this ring features a vivid blue sapphire encircled by a delicate halo of natural diamonds. Set in lustrous platinum, the combination creates a mesmerizing contrast that captures light beautifully. The split shank band adds an extra touch of elegance to this already stunning piece.",
+    price: 54999,
+    originalPrice: 69999,
+    currency: "INR",
+    image:
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=750&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=750&fit=crop",
+    ],
+    category: "Rings",
+    rating: 4.9,
+    reviewCount: 245,
+    sizes: ["12", "14", "16", "18"],
+    metalOptions: [
+      { label: "Platinum", color: "#E5E4E2" },
+      { label: "18K White Gold", color: "#E8E8E8" },
+    ],
+    inStock: true,
+    sku: "AG-RNG-003",
+    features: [
+      "Ceylon Blue Sapphire",
+      "Diamond Halo",
+      "Platinum Setting",
+      "Split Shank Band",
+      "GIA Certified",
+    ],
+    specifications: [
+      { label: "Gemstone", value: "Blue Sapphire, Diamond" },
+      { label: "Metal", value: "Platinum" },
+      { label: "Setting", value: "Halo & Prong" },
+      { label: "Band Width", value: "2.8mm" },
+      { label: "Origin", value: "Thailand" },
+    ],
+  },
+  {
     id: "opal-iolite-blue-topaz-earrings",
     name: "Opal & Iolite Blue Topaz Earrings",
     shortDesc: "Opal & Iolite Blue Topaz Earrings - Blue Hued & Silver Bezel-set Earrings",
@@ -30,11 +152,10 @@ export const products: Product[] = [
     originalPrice: 20599,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/solitaire-jewellery-desktop-banner_2.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/solitaire-jewellery-desktop-banner_2.jpg?width=1440&quality=85&auto=avif,webp",
-      "https://media.angara.com/angara/promotion/banners/solitaire-jewellery-desktop-banner_2.jpg?width=1440&quality=85&auto=avif,webp",
-      "https://media.angara.com/angara/promotion/banners/solitaire-jewellery-desktop-banner_2.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600&h=750&fit=crop",
     ],
     category: "Earrings",
     rating: 4.8,
@@ -46,7 +167,7 @@ export const products: Product[] = [
       { label: "14K Rose Gold", color: "#B76E79" },
     ],
     inStock: true,
-    sku: "PJ-EAR-001",
+    sku: "AG-EAR-001",
     features: [
       "Handcrafted in Thailand",
       "AAA Grade Natural Gemstones",
@@ -72,10 +193,10 @@ export const products: Product[] = [
     originalPrice: 18149,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/mens-jewellery-desktop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/mens-jewellery-desktop-banner.jpg?width=1440&quality=85&auto=avif,webp",
-      "https://media.angara.com/angara/promotion/banners/mens-jewellery-desktop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?w=600&h=750&fit=crop",
     ],
     category: "Earrings",
     rating: 4.7,
@@ -86,7 +207,7 @@ export const products: Product[] = [
       { label: "14K Yellow Gold", color: "#FFD700" },
     ],
     inStock: true,
-    sku: "PJ-EAR-002",
+    sku: "AG-EAR-002",
     features: [
       "Natural Malachite Stone",
       "Rustic Finish",
@@ -112,10 +233,10 @@ export const products: Product[] = [
     originalPrice: 24799,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/tennis-bracelets-dektop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/tennis-bracelets-dektop-banner.jpg?width=1440&quality=85&auto=avif,webp",
-      "https://media.angara.com/angara/promotion/banners/tennis-bracelets-dektop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=750&fit=crop",
     ],
     category: "Earrings",
     rating: 4.9,
@@ -126,7 +247,7 @@ export const products: Product[] = [
       { label: "18K Rose Gold", color: "#B76E79" },
     ],
     inStock: true,
-    sku: "PJ-EAR-003",
+    sku: "AG-EAR-003",
     features: [
       "Ethiopian Opal",
       "Rose Gold Setting",
@@ -152,10 +273,9 @@ export const products: Product[] = [
     originalPrice: 19799,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/gemstone_jewellery_desktop_section_banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/gemstone_jewellery_desktop_section_banner.jpg?width=1440&quality=85&auto=avif,webp",
-      "https://media.angara.com/angara/promotion/banners/gemstone_jewellery_desktop_section_banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=600&h=750&fit=crop",
     ],
     category: "Earrings",
     rating: 4.6,
@@ -166,7 +286,7 @@ export const products: Product[] = [
       { label: "18K Yellow Gold", color: "#FFD700" },
     ],
     inStock: true,
-    sku: "PJ-EAR-004",
+    sku: "AG-EAR-004",
     features: [
       "Natural Garnet",
       "Rusticated Quartz",
@@ -192,9 +312,9 @@ export const products: Product[] = [
     originalPrice: 37199,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/tennis-bracelets-dektop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/tennis-bracelets-dektop-banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
     ],
     category: "Bangles",
     rating: 4.8,
@@ -205,7 +325,7 @@ export const products: Product[] = [
       { label: "14K Yellow Gold", color: "#FFD700" },
     ],
     inStock: true,
-    sku: "PJ-BNG-001",
+    sku: "AG-BNG-001",
     features: [
       "Natural Rubies",
       "Secure Box Clasp",
@@ -222,6 +342,45 @@ export const products: Product[] = [
     ],
   },
   {
+    id: "gold-bangle-diamond",
+    name: "Gold Bangle with Diamonds",
+    shortDesc: "Elegant gold bangle with pavé diamond accents",
+    fullDesc:
+      "This elegant gold bangle features a stunning pavé diamond design that wraps around the wrist in a seamless display of brilliance. Crafted from solid 18K gold with VS-grade diamonds, it's a versatile piece that transitions effortlessly from day to night.",
+    price: 52999,
+    originalPrice: 67999,
+    currency: "INR",
+    image:
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=750&fit=crop",
+    ],
+    category: "Bangles",
+    rating: 4.9,
+    reviewCount: 178,
+    sizes: ["2.4", "2.6", "2.8"],
+    metalOptions: [
+      { label: "18K Yellow Gold", color: "#FFD700" },
+      { label: "18K Rose Gold", color: "#B76E79" },
+    ],
+    inStock: true,
+    sku: "AG-BNG-002",
+    features: [
+      "VS-grade Natural Diamonds",
+      "18K Solid Gold",
+      "Pavé Setting",
+      "Secure Push-Clasp",
+      "Gift Box Included",
+    ],
+    specifications: [
+      { label: "Gemstone", value: "Natural Diamond" },
+      { label: "Metal", value: "18K Gold" },
+      { label: "Setting", value: "Pavé" },
+      { label: "Inner Diameter", value: "62mm" },
+      { label: "Origin", value: "Thailand" },
+    ],
+  },
+  {
     id: "gemstone-pendant-emerald",
     name: "Gemstone Pendant Emerald",
     shortDesc: "Emerald & Diamond Pendant Necklace in 14K Gold",
@@ -231,9 +390,10 @@ export const products: Product[] = [
     originalPrice: 49599,
     currency: "INR",
     image:
-      "https://media.angara.com/angara/promotion/banners/gemstone_jewellery_desktop_section_banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=750&fit=crop",
     images: [
-      "https://media.angara.com/angara/promotion/banners/gemstone_jewellery_desktop_section_banner.jpg?width=1440&quality=85&auto=avif,webp",
+      "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=750&fit=crop",
+      "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&h=750&fit=crop",
     ],
     category: "Pendants",
     rating: 4.9,
@@ -244,7 +404,7 @@ export const products: Product[] = [
       { label: "14K White Gold", color: "#E8E8E8" },
     ],
     inStock: true,
-    sku: "PJ-PND-001",
+    sku: "AG-PND-001",
     features: [
       "Colombian Emerald",
       "Diamond Halo",
@@ -260,15 +420,57 @@ export const products: Product[] = [
       { label: "Origin", value: "Thailand" },
     ],
   },
+  {
+    id: "diamond-heart-pendant",
+    name: "Diamond Heart Pendant",
+    shortDesc: "Delicate heart-shaped pendant with pavé diamonds in rose gold",
+    fullDesc:
+      "Express love with this enchanting heart-shaped pendant adorned with pavé-set diamonds. Crafted in warm 14K rose gold, the delicate heart design sparkles with every movement. Suspended from a fine rose gold chain, it's a heartfelt gift for someone special or a beautiful addition to your own collection.",
+    price: 22999,
+    originalPrice: 29999,
+    currency: "INR",
+    image:
+      "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&h=750&fit=crop",
+    images: [
+      "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&h=750&fit=crop",
+    ],
+    category: "Pendants",
+    rating: 4.8,
+    reviewCount: 234,
+    sizes: ["16 inch", "18 inch"],
+    metalOptions: [
+      { label: "14K Rose Gold", color: "#B76E79" },
+      { label: "14K Yellow Gold", color: "#FFD700" },
+    ],
+    inStock: true,
+    sku: "AG-PND-002",
+    features: [
+      "Heart-shaped Design",
+      "Pavé Diamonds",
+      "14K Rose Gold",
+      "Adjustable Chain",
+      "Perfect Gift",
+    ],
+    specifications: [
+      { label: "Gemstone", value: "Natural Diamond" },
+      { label: "Metal", value: "14K Rose Gold" },
+      { label: "Pendant Size", value: "15mm x 15mm" },
+      { label: "Chain", value: "Cable, adjustable" },
+      { label: "Origin", value: "Thailand" },
+    ],
+  },
 ];
 
-export const allCategories = [
-  "Rings",
-  "Pendants",
-  "Bangles",
-  "Earrings",
-];
+export const allCategories = ["Rings", "Earrings", "Pendants", "Bangles"];
 
 export function getProductById(id: string): Product | undefined {
   return products.find((p) => p.id === id);
+}
+
+export function getProductsByCategory(category: string): Product[] {
+  return products.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+}
+
+export function getDiscount(price: number, originalPrice: number): number {
+  return Math.round(((originalPrice - price) / originalPrice) * 100);
 }

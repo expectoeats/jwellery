@@ -1,47 +1,66 @@
 "use client";
 
-import { useState } from "react";
-import { FiSearch, FiUser, FiHeart, FiShoppingBag, FiMapPin } from "react-icons/fi";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { FiSearch, FiUser, FiHeart, FiShoppingBag, FiMenu, FiX } from "react-icons/fi";
 import { FaGem } from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 const navLinks = [
-  { label: "New Arrival", hasGem: true },
-  { label: "Best Sellers", hasGem: false },
-  { label: "Our Story", hasGem: false },
-  { label: "Collections", hasGem: false },
-  { label: "Rings", hasGem: false },
-  { label: "Earrings", hasGem: false },
-  { label: "Pendants", hasGem: false },
-  { label: "Bangles", hasGem: false },
-  { label: "Happy Customers", hasGem: false },
-  { label: "Contact us", hasGem: false },
+  { label: "New Arrival", href: "/collections", hasGem: true },
+  { label: "Best Sellers", href: "/collections" },
+  { label: "Our Story", href: "/about" },
+  { label: "Collections", href: "/collections" },
+  { label: "Rings", href: "/collections" },
+  { label: "Earrings", href: "/collections" },
+  { label: "Pendants", href: "/collections" },
+  { label: "Bangles", href: "/collections" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
   const { totalItems, setCartOpen } = useCart();
+  const { totalItems: wishlistCount } = useWishlist();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setSearchOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header className={`sticky top-0 z-50 bg-white transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}>
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 lg:px-12">
         {/* Top Bar */}
-        <div className="flex items-center justify-between h-[56px] md:h-[62px] border-b border-[#e5dfd8]">
-          {/* Left - Location */}
-          <div className="flex items-center gap-1.5 min-w-[80px]">
-            <FiMapPin className="text-[13px] text-[#2c2420]" />
-            <span className="text-[11px] font-sans text-[#2c2420] tracking-wide">Thailand</span>
-          </div>
-
-          {/* Center - Logo */}
-          <a href="/" className="absolute left-1/2 -translate-x-1/2">
-            <span className="text-[22px] md:text-[26px] lg:text-[28px] tracking-[0.12em] font-serif font-light text-[#2c2420] whitespace-nowrap">
-              PASSIONE JEWELRY
-            </span>
-          </a>
+        <div className="flex items-center justify-between h-[52px] md:h-[62px] border-b border-[#e5dfd8]">
+          {/* Left - Logo */}
+          <Link href="/" className="flex items-center shrink-0">
+            <img src="/logo.jpeg" alt="Aura Gems" className="h-[32px] md:h-[42px] lg:h-[48px] object-contain" />
+          </Link>
 
           {/* Right - Icons */}
-          <div className="flex items-center gap-3 md:gap-4 min-w-[80px] justify-end">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            {/* Desktop Search */}
             <div className="hidden lg:flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-[7px]">
               <FiSearch className="text-[12px] text-[#6b5e54]" />
               <input
@@ -50,75 +69,145 @@ export default function Header() {
                 className="bg-transparent text-[11px] font-sans text-[#2c2420] placeholder:text-[#6b5e54] outline-none w-[200px]"
               />
             </div>
-            <button className="lg:hidden text-[#2c2420]">
-              <FiSearch className="text-[17px]" />
+
+            {/* Mobile Search Toggle */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="lg:hidden w-9 h-9 flex items-center justify-center text-[#2c2420] -mr-1"
+              aria-label="Search"
+            >
+              <FiSearch className="text-[18px]" />
             </button>
-            <button className="text-[#2c2420] hover:text-[#c5a47e] transition-colors">
+
+            <button className="text-[#2c2420] hover:text-[#c5a47e] transition-colors hidden sm:flex w-9 h-9 items-center justify-center" aria-label="Account">
               <FiUser className="text-[17px]" />
             </button>
-            <button className="text-[#2c2420] hover:text-[#c5a47e] transition-colors">
+
+            <Link href="/wishlist" className="text-[#2c2420] hover:text-[#c5a47e] transition-colors relative w-9 h-9 flex items-center justify-center" aria-label="Wishlist">
               <FiHeart className="text-[17px]" />
-            </button>
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 w-[16px] h-[16px] bg-[#c5a47e] text-white text-[9px] font-sans font-semibold rounded-full flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
             <button
               onClick={() => setCartOpen(true)}
-              className="text-[#2c2420] hover:text-[#c5a47e] transition-colors relative"
+              className="text-[#2c2420] hover:text-[#c5a47e] transition-colors relative w-9 h-9 flex items-center justify-center"
+              aria-label="Cart"
             >
               <FiShoppingBag className="text-[17px]" />
               {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#c5a47e] text-white text-[9px] font-sans font-semibold rounded-full flex items-center justify-center">
+                <span className="absolute top-0 right-0 w-[16px] h-[16px] bg-[#c5a47e] text-white text-[9px] font-sans font-semibold rounded-full flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
             </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden w-9 h-9 flex items-center justify-center text-[#2c2420]"
+              aria-label="Menu"
+            >
+              {mobileOpen ? <FiX className="text-[22px]" /> : <FiMenu className="text-[22px]" />}
+            </button>
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Mobile Search Bar */}
+        <div className={`lg:hidden overflow-hidden transition-all duration-300 ${searchOpen ? "max-h-[60px] py-3" : "max-h-0"}`}>
+          <div className="flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-2.5">
+            <FiSearch className="text-[14px] text-[#6b5e54] shrink-0" />
+            <input
+              type="text"
+              placeholder="Search jewelry..."
+              className="bg-transparent text-[13px] font-sans text-[#2c2420] placeholder:text-[#6b5e54] outline-none flex-1"
+              autoFocus={searchOpen}
+            />
+          </div>
+        </div>
+
+        {/* Desktop Navigation */}
         <nav className="hidden md:block border-b border-[#e5dfd8]">
           <ul className="flex items-center justify-center gap-6 lg:gap-8 h-[42px]">
             {navLinks.map((link) => (
               <li key={link.label}>
-                <a
-                  href="#"
+                <Link
+                  href={link.href}
                   className="flex items-center gap-1 text-[11px] font-sans font-medium text-[#2c2420] hover:text-[#c5a47e] transition-colors tracking-[0.04em] uppercase whitespace-nowrap"
                 >
                   {link.hasGem && <FaGem className="text-[8px] text-[#c5a47e]" />}
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
         </nav>
       </div>
 
-      {/* Mobile menu button */}
-      <button
-        className="md:hidden fixed bottom-5 right-5 z-50 bg-[#2c2420] text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {mobileOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
+      {/* Mobile Menu Overlay */}
+      <div
+        className={`md:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setMobileOpen(false)}
+      />
 
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 top-[56px] z-40 bg-white overflow-y-auto">
-          <ul className="flex flex-col p-6 gap-5">
+      {/* Mobile Menu Panel */}
+      <div
+        className={`md:hidden fixed top-0 right-0 h-full w-[280px] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-out ${
+          mobileOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between px-5 h-[52px] border-b border-[#e5dfd8]">
+          <span className="text-[14px] font-serif font-medium text-[#2c2420]">Menu</span>
+          <button onClick={() => setMobileOpen(false)} className="w-8 h-8 flex items-center justify-center" aria-label="Close menu">
+            <FiX className="text-[20px] text-[#2c2420]" />
+          </button>
+        </div>
+        <nav className="overflow-y-auto h-[calc(100%-52px)]">
+          <ul className="flex flex-col py-2">
             {navLinks.map((link) => (
               <li key={link.label}>
-                <a href="#" className="flex items-center gap-2 text-sm font-sans font-medium text-[#2c2420] uppercase tracking-wide">
-                  {link.hasGem && <FaGem className="text-[10px] text-[#c5a47e]" />}
+                <Link
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 px-5 py-3.5 text-[13px] font-sans font-medium text-[#2c2420] hover:bg-[#f8f5f1] transition-colors border-b border-[#f0ede8]"
+                >
+                  {link.hasGem && <FaGem className="text-[9px] text-[#c5a47e]" />}
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
-        </div>
-      )}
+          <div className="px-5 py-6 border-t border-[#e5dfd8] mt-2">
+            <Link
+              href="/wishlist"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2.5 text-[13px] font-sans font-medium text-[#2c2420] mb-4"
+            >
+              <FiHeart className="text-[15px]" />
+              Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+            </Link>
+            <Link
+              href="/about"
+              onClick={() => setMobileOpen(false)}
+              className="block text-[11px] font-sans text-[#6b5e54] mb-2 hover:text-[#2c2420]"
+            >
+              Our Story
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="block text-[11px] font-sans text-[#6b5e54] hover:text-[#2c2420]"
+            >
+              Contact Us
+            </Link>
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }

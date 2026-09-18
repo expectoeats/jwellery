@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { Product } from "@/data/products";
 
 export interface CartItem {
@@ -27,6 +27,23 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setCartOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const stored = localStorage.getItem("aura-gems-cart");
+      if (stored) setItems(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      try {
+        localStorage.setItem("aura-gems-cart", JSON.stringify(items));
+      } catch {}
+    }
+  }, [items, mounted]);
 
   const addItem = useCallback((product: Product, size: string, metal: string) => {
     setItems((prev) => {

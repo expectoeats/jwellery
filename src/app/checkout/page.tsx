@@ -31,7 +31,7 @@ export default function CheckoutPage() {
   const total = subtotal + shippingCost + tax;
 
   const handlePlaceOrder = () => {
-    const id = "PJ" + Date.now().toString(36).toUpperCase();
+    const id = "AG" + Date.now().toString(36).toUpperCase();
     setOrderId(id);
     clearCart();
     setStep("confirmation");
