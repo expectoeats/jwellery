@@ -9,6 +9,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import TrustBadges from "@/components/TrustBadges";
 import BackToTop from "@/components/BackToTop";
 import ProductCard from "@/components/ProductCard";
+import CartDrawer from "@/components/CartDrawer";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { FiHeart, FiStar, FiTruck, FiShield, FiPackage, FiMinus, FiPlus, FiCheck } from "react-icons/fi";
@@ -322,6 +323,7 @@ export default function ProductDetailPage() {
       </main>
       <Footer />
       <BackToTop />
+      <CartDrawer />
     </>
   );
 }

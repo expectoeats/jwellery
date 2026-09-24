@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { products, allCategories } from "@/data/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,21 +9,73 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import TrustBadges from "@/components/TrustBadges";
 import BackToTop from "@/components/BackToTop";
+import CartDrawer from "@/components/CartDrawer";
 import { FiSliders, FiX, FiChevronDown } from "react-icons/fi";
 
 type SortOption = "featured" | "price-low" | "price-high" | "rating";
 
-export default function CollectionsPage() {
+function CollectionsContent() {
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const searchParam = searchParams.get("search");
+  const filterParam = searchParams.get("filter");
+
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchFilter, setSearchFilter] = useState<string>("");
   const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    let result = selectedCategory === "All"
-      ? [...products]
-      : products.filter((p) => p.category === selectedCategory);
+  useEffect(() => {
+    if (categoryParam) {
+      const matched = allCategories.find(
+        (c) => c.toLowerCase() === categoryParam.toLowerCase()
+      );
+      if (matched) {
+        setSelectedCategory(matched);
+      } else {
+        setSelectedCategory("All");
+      }
+    } else {
+      setSelectedCategory("All");
+    }
 
+    if (searchParam) {
+      setSearchFilter(searchParam);
+    } else {
+      setSearchFilter("");
+    }
+
+    if (filterParam === "best-sellers") {
+      setSortBy("rating");
+    } else if (filterParam === "new") {
+      setSortBy("featured");
+    }
+  }, [categoryParam, searchParam, filterParam]);
+
+  const filtered = useMemo(() => {
+    let result = [...products];
+
+    // Filter by category
+    if (selectedCategory !== "All") {
+      result = result.filter(
+        (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    // Filter by search query
+    if (searchFilter.trim()) {
+      const q = searchFilter.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.shortDesc.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
     switch (sortBy) {
       case "price-low":
         result.sort((a, b) => a.price - b.price);
@@ -37,14 +90,18 @@ export default function CollectionsPage() {
         break;
     }
     return result;
-  }, [selectedCategory, sortBy]);
+  }, [selectedCategory, searchFilter, sortBy]);
 
   const sortLabel = (v: SortOption) => {
     switch (v) {
-      case "price-low": return "Price: Low to High";
-      case "price-high": return "Price: High to Low";
-      case "rating": return "Top Rated";
-      default: return "Featured";
+      case "price-low":
+        return "Price: Low to High";
+      case "price-high":
+        return "Price: High to Low";
+      case "rating":
+        return "Top Rated";
+      default:
+        return "Featured";
     }
   };
 
@@ -58,7 +115,10 @@ export default function CollectionsPage() {
           {["All", ...allCategories].map((cat) => (
             <button
               key={cat}
-              onClick={() => { setSelectedCategory(cat); setMobileFilterOpen(false); }}
+              onClick={() => {
+                setSelectedCategory(cat);
+                setMobileFilterOpen(false);
+              }}
               className={`block w-full text-left text-[11px] sm:text-[12px] font-sans py-2 sm:py-1.5 px-3 rounded-sm transition-colors ${
                 selectedCategory === cat
                   ? "bg-[#2c2420] text-white"
@@ -99,20 +159,39 @@ export default function CollectionsPage() {
       <Header />
       <main className="flex-1 bg-white">
         <div className="max-w-[1440px] mx-auto px-5 md:px-8 lg:px-12">
-          <Breadcrumbs items={[{ label: "Collections" }]} />
+          <Breadcrumbs
+            items={[
+              { label: "Collections", href: "/collections" },
+              ...(selectedCategory !== "All" ? [{ label: selectedCategory }] : []),
+            ]}
+          />
 
-          <div className="flex items-end justify-between pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-4 gap-3">
             <div>
               <h1 className="text-[24px] sm:text-[28px] md:text-[34px] font-serif font-light text-[#2c2420] mb-1 sm:mb-2">
-                All Collections
+                {searchFilter
+                  ? `Search: "${searchFilter}"`
+                  : selectedCategory !== "All"
+                  ? `${selectedCategory} Collection`
+                  : "All Collections"}
               </h1>
-              <p className="text-[11px] sm:text-[12px] font-sans text-[#6b5e54]">
-                {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-[11px] sm:text-[12px] font-sans text-[#6b5e54]">
+                  {filtered.length} product{filtered.length !== 1 ? "s" : ""} found
+                </p>
+                {searchFilter && (
+                  <button
+                    onClick={() => setSearchFilter("")}
+                    className="text-[11px] font-sans text-[#c5a47e] underline hover:text-[#2c2420]"
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Mobile Sort */}
-            <div className="relative md:hidden">
+            <div className="relative md:hidden self-end">
               <button
                 onClick={() => setSortOpen(!sortOpen)}
                 className="flex items-center gap-1.5 text-[11px] font-sans text-[#2c2420] border border-[#e5dfd8] px-3 py-2"
@@ -125,7 +204,10 @@ export default function CollectionsPage() {
                   {(["featured", "price-low", "price-high", "rating"] as SortOption[]).map((opt) => (
                     <button
                       key={opt}
-                      onClick={() => { setSortBy(opt); setSortOpen(false); }}
+                      onClick={() => {
+                        setSortBy(opt);
+                        setSortOpen(false);
+                      }}
                       className={`block w-full text-left text-[11px] font-sans py-2.5 px-3 hover:bg-[#f8f5f1] transition-colors ${
                         sortBy === opt ? "text-[#c5a47e] font-medium" : "text-[#6b5e54]"
                       }`}
@@ -192,7 +274,10 @@ export default function CollectionsPage() {
                 <div className="text-center py-16 sm:py-20">
                   <p className="text-[14px] sm:text-[16px] font-serif text-[#6b5e54]">No products found.</p>
                   <button
-                    onClick={() => setSelectedCategory("All")}
+                    onClick={() => {
+                      setSelectedCategory("All");
+                      setSearchFilter("");
+                    }}
                     className="mt-3 sm:mt-4 text-[11px] sm:text-[12px] font-sans text-[#c5a47e] underline hover:text-[#2c2420] transition-colors"
                   >
                     View All Products
@@ -207,6 +292,19 @@ export default function CollectionsPage() {
       </main>
       <Footer />
       <BackToTop />
+      <CartDrawer />
     </>
+  );
+}
+
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-[13px] font-sans text-[#6b5e54]">Loading collections...</p>
+      </div>
+    }>
+      <CollectionsContent />
+    </Suspense>
   );
 }

@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import BackToTop from "@/components/BackToTop";
+import CartDrawer from "@/components/CartDrawer";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { FiHeart, FiTrash2, FiShoppingBag } from "react-icons/fi";
@@ -101,6 +102,7 @@ export default function WishlistPage() {
       </main>
       <Footer />
       <BackToTop />
+      <CartDrawer />
     </>
   );
 }

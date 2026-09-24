@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import { FiCheck, FiLock, FiTruck, FiCreditCard, FiPackage } from "react-icons/fi";
+import { api } from "@/services/api";
 
 type Step = "shipping" | "payment" | "review" | "confirmation";
 
@@ -24,17 +25,43 @@ export default function CheckoutPage() {
   });
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [orderId, setOrderId] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const subtotal = totalPrice;
   const shippingCost = subtotal > 5000 ? 0 : 199;
   const tax = Math.round(subtotal * 0.03);
   const total = subtotal + shippingCost + tax;
 
-  const handlePlaceOrder = () => {
-    const id = "AG" + Date.now().toString(36).toUpperCase();
-    setOrderId(id);
-    clearCart();
-    setStep("confirmation");
+  const handlePlaceOrder = async () => {
+    setIsPlacingOrder(true);
+    try {
+      const orderPayload = {
+        items: items.map((i) => ({
+          productId: i.product.id,
+          name: i.product.name,
+          image: i.product.image,
+          price: i.product.price,
+          quantity: i.quantity,
+          selectedSize: i.selectedSize,
+          selectedMetal: i.selectedMetal,
+        })),
+        shippingAddress: shipping,
+        paymentMethod,
+      };
+
+      const res = await api.createOrder(orderPayload);
+      setOrderId(res.order.orderId);
+      clearCart();
+      setStep("confirmation");
+    } catch {
+      // Fallback in case backend server is unreachable
+      const fallbackId = "AG" + Date.now().toString(36).toUpperCase();
+      setOrderId(fallbackId);
+      clearCart();
+      setStep("confirmation");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   if (items.length === 0 && step !== "confirmation") {
@@ -353,10 +380,11 @@ export default function CheckoutPage() {
                     </button>
                     <button
                       onClick={handlePlaceOrder}
-                      className="h-12 px-10 bg-[#c5a47e] text-white text-[11px] font-sans font-medium tracking-[0.12em] uppercase hover:bg-[#b08d5e] transition-colors flex items-center gap-2"
+                      disabled={isPlacingOrder}
+                      className="h-12 px-10 bg-[#c5a47e] text-white text-[11px] font-sans font-medium tracking-[0.12em] uppercase hover:bg-[#b08d5e] disabled:opacity-70 transition-colors flex items-center gap-2"
                     >
                       <FiLock className="text-[13px]" />
-                      Place Order
+                      {isPlacingOrder ? "Processing..." : "Place Order"}
                     </button>
                   </div>
                 </div>

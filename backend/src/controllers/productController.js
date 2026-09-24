@@ -1,0 +1,168 @@
+const Product = require("../models/Product");
+
+// @desc    Get all products with filtering, search, and sorting
+// @route   GET /api/products
+// @access  Public
+const getProducts = async (req, res, next) => {
+  try {
+    const { category, search, sortBy, limit, page } = req.query;
+
+    let query = {};
+
+    // Filter by Category
+    if (category && category !== "All") {
+      query.category = { $regex: new RegExp(`^${category}$`, "i") };
+    }
+
+    // Search keyword
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { shortDesc: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+        { sku: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Sorting
+    let sortOptions = {};
+    if (sortBy === "price-low") {
+      sortOptions = { price: 1 };
+    } else if (sortBy === "price-high") {
+      sortOptions = { price: -1 };
+    } else if (sortBy === "rating") {
+      sortOptions = { rating: -1, reviewCount: -1 };
+    } else {
+      sortOptions = { createdAt: -1 };
+    }
+
+    const pageSize = Number(limit) || 50;
+    const currentPage = Number(page) || 1;
+    const skip = (currentPage - 1) * pageSize;
+
+    const total = await Product.countDocuments(query);
+    const products = await Product.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(pageSize);
+
+    res.json({
+      success: true,
+      count: products.length,
+      total,
+      page: currentPage,
+      pages: Math.ceil(total / pageSize),
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get single product by id or slug
+// @route   GET /api/products/:id
+// @access  Public
+const getProductById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    let product = await Product.findOne({ id });
+
+    // Fallback if searched by MongoDB ObjectId
+    if (!product && id.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(id);
+    }
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    res.json({
+      success: true,
+      product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all distinct categories
+// @route   GET /api/products/categories
+// @access  Public
+const getCategories = async (req, res, next) => {
+  try {
+    const categories = await Product.distinct("category");
+    res.json({
+      success: true,
+      categories,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create a product
+// @route   POST /api/products
+// @access  Private/Admin
+const createProduct = async (req, res, next) => {
+  try {
+    const product = new Product(req.body);
+    const savedProduct = await product.save();
+    res.status(201).json({
+      success: true,
+      product: savedProduct,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update a product
+// @route   PUT /api/products/:id
+// @access  Private/Admin
+const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let product = await Product.findOne({ id });
+    if (!product && id.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(id);
+    }
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+    Object.assign(product, req.body);
+    const updated = await product.save();
+    res.json({ success: true, product: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete a product
+// @route   DELETE /api/products/:id
+// @access  Private/Admin
+const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let product = await Product.findOne({ id });
+    if (!product && id.match(/^[0-9a-fA-F]{24}$/)) {
+      product = await Product.findById(id);
+    }
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+    await Product.deleteOne({ _id: product._id });
+    res.json({ success: true, message: "Product deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getProducts,
+  getProductById,
+  getCategories,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+};

@@ -2,31 +2,43 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiSearch, FiUser, FiHeart, FiShoppingBag, FiMenu, FiX } from "react-icons/fi";
 import { FaGem } from "react-icons/fa";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 
 const navLinks = [
-  { label: "New Arrival", href: "/collections", hasGem: true },
-  { label: "Best Sellers", href: "/collections" },
+  { label: "New Arrival", href: "/collections?filter=new", hasGem: true },
+  { label: "Best Sellers", href: "/collections?filter=best-sellers" },
   { label: "Our Story", href: "/about" },
   { label: "Collections", href: "/collections" },
-  { label: "Rings", href: "/collections" },
-  { label: "Earrings", href: "/collections" },
-  { label: "Pendants", href: "/collections" },
-  { label: "Bangles", href: "/collections" },
+  { label: "Rings", href: "/collections?category=Rings" },
+  { label: "Earrings", href: "/collections?category=Earrings" },
+  { label: "Pendants", href: "/collections?category=Pendants" },
+  { label: "Bangles", href: "/collections?category=Bangles" },
   { label: "Contact Us", href: "/contact" },
 ];
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [accountHref, setAccountHref] = useState("/login");
+  const [accountLabel, setAccountLabel] = useState("My Account / Login");
   const pathname = usePathname();
+  const router = useRouter();
   const { totalItems, setCartOpen } = useCart();
   const { totalItems: wishlistCount } = useWishlist();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/collections?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -37,6 +49,24 @@ export default function Header() {
   useEffect(() => {
     setMobileOpen(false);
     setSearchOpen(false);
+    try {
+      const stored = localStorage.getItem("aura-gems-user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.role === "admin") {
+          setAccountHref("/admin");
+          setAccountLabel("Admin Dashboard");
+        } else {
+          setAccountHref("/account");
+          setAccountLabel("My Account");
+        }
+      } else {
+        setAccountHref("/login");
+        setAccountLabel("Sign In");
+      }
+    } catch {
+      setAccountHref("/login");
+    }
   }, [pathname]);
 
   useEffect(() => {
@@ -61,14 +91,18 @@ export default function Header() {
           {/* Right - Icons */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
             {/* Desktop Search */}
-            <div className="hidden lg:flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-[7px]">
-              <FiSearch className="text-[12px] text-[#6b5e54]" />
+            <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-[7px]">
+              <button type="submit" aria-label="Submit search">
+                <FiSearch className="text-[12px] text-[#6b5e54] hover:text-[#2c2420] transition-colors" />
+              </button>
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search rings, pendants, earrings..."
                 className="bg-transparent text-[11px] font-sans text-[#2c2420] placeholder:text-[#6b5e54] outline-none w-[200px]"
               />
-            </div>
+            </form>
 
             {/* Mobile Search Toggle */}
             <button
@@ -79,9 +113,9 @@ export default function Header() {
               <FiSearch className="text-[18px]" />
             </button>
 
-            <button className="text-[#2c2420] hover:text-[#c5a47e] transition-colors hidden sm:flex w-9 h-9 items-center justify-center" aria-label="Account">
+            <Link href={accountHref} className="text-[#2c2420] hover:text-[#c5a47e] transition-colors hidden sm:flex w-9 h-9 items-center justify-center" aria-label="Account">
               <FiUser className="text-[17px]" />
-            </button>
+            </Link>
 
             <Link href="/wishlist" className="text-[#2c2420] hover:text-[#c5a47e] transition-colors relative w-9 h-9 flex items-center justify-center" aria-label="Wishlist">
               <FiHeart className="text-[17px]" />
@@ -118,15 +152,19 @@ export default function Header() {
 
         {/* Mobile Search Bar */}
         <div className={`lg:hidden overflow-hidden transition-all duration-300 ${searchOpen ? "max-h-[60px] py-3" : "max-h-0"}`}>
-          <div className="flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-2.5">
-            <FiSearch className="text-[14px] text-[#6b5e54] shrink-0" />
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 border border-[#e5dfd8] rounded-full px-4 py-2.5">
+            <button type="submit" aria-label="Submit search">
+              <FiSearch className="text-[14px] text-[#6b5e54] shrink-0" />
+            </button>
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search jewelry..."
               className="bg-transparent text-[13px] font-sans text-[#2c2420] placeholder:text-[#6b5e54] outline-none flex-1"
               autoFocus={searchOpen}
             />
-          </div>
+          </form>
         </div>
 
         {/* Desktop Navigation */}
@@ -183,6 +221,14 @@ export default function Header() {
             ))}
           </ul>
           <div className="px-5 py-6 border-t border-[#e5dfd8] mt-2">
+            <Link
+              href={accountHref}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2.5 text-[13px] font-sans font-medium text-[#2c2420] mb-4"
+            >
+              <FiUser className="text-[15px]" />
+              {accountLabel}
+            </Link>
             <Link
               href="/wishlist"
               onClick={() => setMobileOpen(false)}
