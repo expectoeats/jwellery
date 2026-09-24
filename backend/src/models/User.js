@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     phone: { type: String, default: "" },
+    avatar: { type: String, default: "" },
+    isVerified: { type: Boolean, default: false },
+    verificationOtp: { type: String, default: null },
+    verificationOtpExpires: { type: Date, default: null },
+    resetPasswordOtp: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
     addresses: [addressSchema],
   },
   {

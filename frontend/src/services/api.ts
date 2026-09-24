@@ -17,6 +17,7 @@ export interface UserProfile {
   email: string;
   role: "user" | "admin";
   phone?: string;
+  avatar?: string;
   createdAt?: string;
   orderCount?: number;
   totalSpent?: number;
@@ -159,7 +160,14 @@ export const api = {
   },
 
   // Auth & Profile
-  async register(data: { name: string; email: string; password: string; phone?: string }): Promise<AuthResponse> {
+  async register(data: { name: string; email: string; password: string; phone?: string }): Promise<{
+    success: boolean;
+    requiresVerification?: boolean;
+    message: string;
+    email?: string;
+    token?: string;
+    user?: UserProfile;
+  }> {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -170,14 +178,63 @@ export const api = {
     return result;
   },
 
-  async login(data: { email: string; password: string }): Promise<AuthResponse> {
+  async verifyOtp(email: string, otp: string): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "OTP verification failed");
+    return result;
+  },
+
+  async resendOtp(email: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/auth/resend-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to resend OTP");
+    return result;
+  },
+
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to request password reset");
+    return result;
+  },
+
+  async resetPassword(data: { email: string; otp: string; newPassword: string }): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Password reset failed");
+    return result;
+  },
+
+  async login(data: { email: string; password: string }): Promise<AuthResponse & { requiresVerification?: boolean; email?: string }> {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     const result = await res.json();
-    if (!res.ok) throw new Error(result.message || "Login failed");
+    if (!res.ok) {
+      const err: any = new Error(result.message || "Login failed");
+      err.requiresVerification = result.requiresVerification;
+      err.email = result.email;
+      throw err;
+    }
     return result;
   },
 
@@ -187,6 +244,43 @@ export const api = {
     });
     if (!res.ok) throw new Error("Failed to fetch profile");
     return res.json();
+  },
+
+  async uploadAvatar(file: File, token: string): Promise<{
+    success: boolean;
+    message: string;
+    avatar: string;
+    size: { originalKB: number; uploadedKB: number; savedPercent: number };
+  }> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+    const res = await fetch(`${API_BASE}/upload/avatar`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to upload avatar");
+    return result;
+  },
+
+  async uploadProductImage(file: File, token: string, productId?: string): Promise<{
+    success: boolean;
+    url: string;
+    publicId: string;
+    size: { originalKB: number; uploadedKB: number; savedPercent: number };
+  }> {
+    const formData = new FormData();
+    formData.append("image", file);
+    if (productId) formData.append("productId", productId);
+    const res = await fetch(`${API_BASE}/upload/product-image`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to upload product image");
+    return result;
   },
 
   // Orders

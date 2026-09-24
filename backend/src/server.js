@@ -12,6 +12,7 @@ const productRoutes = require("./routes/productRoutes");
 const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 // Connect to MongoDB Atlas
@@ -62,6 +63,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Error Handling
 app.use(notFound);
@@ -74,6 +76,7 @@ app.listen(PORT, () => {
   console.log(`  ✦ Aura Gems Jewelry Backend Server Started ✦  `);
   console.log(`  Port: http://localhost:${PORT}                `);
   console.log(`  Health: http://localhost:${PORT}/api/health   `);
+  console.log(`  Brevo Email: smtp-relay.brevo.com:587 (Active)`);
   console.log(`===============================================`);
 });
 

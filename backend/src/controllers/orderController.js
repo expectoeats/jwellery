@@ -1,6 +1,10 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const User = require("../models/User");
+const {
+  sendOrderConfirmationEmail,
+  sendOrderStatusUpdateEmail,
+} = require("../services/emailService");
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -42,6 +46,13 @@ const createOrder = async (req, res, next) => {
     });
 
     const createdOrder = await order.save();
+
+    // Send confirmation email asynchronously (non-blocking)
+    if (createdOrder.shippingAddress && createdOrder.shippingAddress.email) {
+      sendOrderConfirmationEmail(createdOrder).catch((emailErr) => {
+        console.error("Order confirmation email failed:", emailErr.message);
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -124,10 +135,19 @@ const updateOrderStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
+    const previousStatus = order.orderStatus;
     if (orderStatus) order.orderStatus = orderStatus;
     if (paymentStatus) order.paymentStatus = paymentStatus;
 
     const updatedOrder = await order.save();
+
+    // Send status update email if orderStatus changed
+    if (orderStatus && orderStatus !== previousStatus && updatedOrder.shippingAddress?.email) {
+      sendOrderStatusUpdateEmail(updatedOrder).catch((emailErr) => {
+        console.error("Order status update email failed:", emailErr.message);
+      });
+    }
+
     res.json({
       success: true,
       message: `Order status updated to ${order.orderStatus}`,

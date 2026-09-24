@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -14,11 +15,9 @@ import {
   FiSearch,
   FiLogOut,
   FiCheckCircle,
-  FiTruck,
-  FiClock,
   FiAlertCircle,
   FiShield,
-  FiChevronRight,
+  FiCamera,
 } from "react-icons/fi";
 
 export default function AccountPage() {
@@ -35,12 +34,20 @@ export default function AccountPage() {
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
 
+  // Avatar upload state
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarMsg, setAvatarMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("aura-gems-user");
       const storedToken = localStorage.getItem("aura-gems-token");
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        if (parsed.avatar) setAvatarPreview(parsed.avatar);
       }
       if (storedToken) {
         setToken(storedToken);
@@ -55,7 +62,6 @@ export default function AccountPage() {
       const res = await api.getMyOrders(authToken);
       setOrders(res.orders || []);
     } catch {
-      // If error or guest orders
       setOrders([]);
     } finally {
       setLoadingOrders(false);
@@ -65,15 +71,13 @@ export default function AccountPage() {
   const handleTrackOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!trackOrderId.trim()) return;
-
     setTrackingLoading(true);
     setTrackingError("");
     setTrackedOrder(null);
-
     try {
       const res = await api.getOrder(trackOrderId.trim().toUpperCase());
       setTrackedOrder(res.order);
-    } catch (err: any) {
+    } catch {
       setTrackingError("No order found with this Order ID. Please check and try again.");
     } finally {
       setTrackingLoading(false);
@@ -90,22 +94,58 @@ export default function AccountPage() {
     router.push("/");
   };
 
-  const getStatusStep = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return 1;
-      case "processing":
-        return 2;
-      case "shipped":
-        return 3;
-      case "delivered":
-        return 4;
-      case "cancelled":
-        return -1;
-      default:
-        return 1;
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Client-side preview
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Auto-upload immediately
+    handleAvatarUpload(file);
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!token) {
+      setAvatarMsg({ type: "error", text: "Please sign in to upload a photo." });
+      return;
+    }
+    setAvatarUploading(true);
+    setAvatarMsg(null);
+    try {
+      const res = await api.uploadAvatar(file, token);
+      // Persist to localStorage and state
+      if (user) {
+        const updatedUser = { ...user, avatar: res.avatar };
+        setUser(updatedUser);
+        localStorage.setItem("aura-gems-user", JSON.stringify(updatedUser));
+      }
+      setAvatarPreview(res.avatar);
+      setAvatarMsg({
+        type: "success",
+        text: `Photo uploaded! ${res.size.originalKB}KB → ${res.size.uploadedKB}KB (saved ${res.size.savedPercent}%)`,
+      });
+    } catch (err: any) {
+      setAvatarMsg({ type: "error", text: err.message || "Upload failed. Please try again." });
+    } finally {
+      setAvatarUploading(false);
     }
   };
+
+  const getStatusStep = (status: string) => {
+    switch (status) {
+      case "confirmed": return 1;
+      case "processing": return 2;
+      case "shipped": return 3;
+      case "delivered": return 4;
+      case "cancelled": return -1;
+      default: return 1;
+    }
+  };
+
+  const currentAvatar = avatarPreview || user?.avatar || "";
 
   return (
     <>
@@ -117,9 +157,51 @@ export default function AccountPage() {
           {/* User Banner */}
           <div className="bg-white border border-[#e5dfd8] p-6 sm:p-8 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#f8f5f1] border border-[#c5a47e] flex items-center justify-center text-[#2c2420] text-[20px] font-serif">
-                {user ? user.name.charAt(0).toUpperCase() : <FiUser />}
+              {/* Avatar with upload overlay */}
+              <div className="relative group shrink-0">
+                <div className="w-16 h-16 rounded-full bg-[#f8f5f1] border-2 border-[#c5a47e] overflow-hidden flex items-center justify-center">
+                  {currentAvatar ? (
+                    <Image
+                      src={currentAvatar}
+                      alt={user?.name || "Profile"}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-[22px] font-serif text-[#2c2420]">
+                      {user ? user.name.charAt(0).toUpperCase() : <FiUser />}
+                    </span>
+                  )}
+                </div>
+
+                {/* Camera overlay (visible on hover when logged in) */}
+                {user && (
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    title="Change profile photo"
+                    className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                  >
+                    {avatarUploading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FiCamera className="text-white text-[16px]" />
+                    )}
+                  </button>
+                )}
+
+                {/* Hidden file input */}
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleAvatarFileChange}
+                  className="hidden"
+                />
               </div>
+
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-[20px] sm:text-[24px] font-serif text-[#2c2420]">
@@ -132,8 +214,19 @@ export default function AccountPage() {
                   )}
                 </div>
                 <p className="text-[12px] font-sans text-[#6b5e54]">
-                  {user ? user.email : "Sign in to view your complete order history and manage addresses."}
+                  {user ? user.email : "Sign in to view your complete order history."}
                 </p>
+                {/* Avatar upload status message */}
+                {avatarMsg && (
+                  <p className={`text-[11px] font-sans mt-0.5 ${avatarMsg.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                    {avatarMsg.type === "success" ? "✓ " : "✗ "}{avatarMsg.text}
+                  </p>
+                )}
+                {user && (
+                  <p className="text-[10px] font-sans text-[#8c7e74] mt-0.5">
+                    Hover on photo to change · JPG/PNG/WebP, max 10MB
+                  </p>
+                )}
               </div>
             </div>
 
@@ -231,7 +324,7 @@ export default function AccountPage() {
 
               {user && loadingOrders && (
                 <div className="text-center py-16">
-                  <p className="text-[13px] font-sans text-[#6b5e54]">Loading your order history from database...</p>
+                  <p className="text-[13px] font-sans text-[#6b5e54]">Loading your order history...</p>
                 </div>
               )}
 
@@ -260,17 +353,11 @@ export default function AccountPage() {
                         {/* Order Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#e5dfd8] gap-2 mb-5">
                           <div>
-                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">
-                              Order ID
-                            </span>
-                            <span className="text-[15px] font-sans font-semibold text-[#2c2420]">
-                              {ord.orderId}
-                            </span>
+                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">Order ID</span>
+                            <span className="text-[15px] font-sans font-semibold text-[#2c2420]">{ord.orderId}</span>
                           </div>
                           <div className="sm:text-right">
-                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">
-                              Placed On
-                            </span>
+                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">Placed On</span>
                             <span className="text-[12px] font-sans text-[#2c2420]">
                               {new Date(ord.createdAt).toLocaleDateString("en-IN", {
                                 day: "numeric",
@@ -280,9 +367,7 @@ export default function AccountPage() {
                             </span>
                           </div>
                           <div className="sm:text-right">
-                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">
-                              Total Amount
-                            </span>
+                            <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">Total Amount</span>
                             <span className="text-[15px] font-sans font-semibold text-[#2c2420]">
                               ₹{ord.total.toLocaleString("en-IN")}
                             </span>
@@ -304,7 +389,7 @@ export default function AccountPage() {
                           </div>
                         </div>
 
-                        {/* Interactive Status Timeline */}
+                        {/* Status Timeline */}
                         {ord.orderStatus !== "cancelled" && (
                           <div className="mb-6 p-4 bg-[#f8f5f1] rounded-sm">
                             <div className="flex items-center justify-between max-w-[650px] mx-auto relative">
@@ -319,20 +404,15 @@ export default function AccountPage() {
                                   <div key={s.key} className="flex flex-col items-center z-10">
                                     <div
                                       className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-sans transition-colors ${
-                                        isPassed
-                                          ? "bg-[#2c2420] text-white"
-                                          : "bg-white border border-[#e5dfd8] text-[#6b5e54]"
+                                        isPassed ? "bg-[#2c2420] text-white" : "bg-white border border-[#e5dfd8] text-[#6b5e54]"
                                       }`}
                                     >
                                       {isPassed ? "✓" : idx + 1}
                                     </div>
-                                    <span className="text-[10px] font-sans mt-1.5 text-[#2c2420] font-medium">
-                                      {s.label}
-                                    </span>
+                                    <span className="text-[10px] font-sans mt-1.5 text-[#2c2420] font-medium">{s.label}</span>
                                   </div>
                                 );
                               })}
-                              {/* Connector line */}
                               <div className="absolute top-3.5 left-4 right-4 h-[2px] bg-[#e5dfd8] -z-0" />
                             </div>
                           </div>
@@ -360,13 +440,18 @@ export default function AccountPage() {
                           ))}
                         </div>
 
-                        {/* Delivery address & tracking info */}
+                        {/* Delivery info */}
                         <div className="mt-4 pt-4 border-t border-[#e5dfd8] flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-sans text-[#6b5e54] gap-2">
                           <p>
-                            Delivering to: <span className="text-[#2c2420] font-medium">{ord.shippingAddress.firstName} {ord.shippingAddress.lastName}</span> ({ord.shippingAddress.city}, {ord.shippingAddress.pincode})
+                            Delivering to:{" "}
+                            <span className="text-[#2c2420] font-medium">
+                              {ord.shippingAddress.firstName} {ord.shippingAddress.lastName}
+                            </span>{" "}
+                            ({ord.shippingAddress.city}, {ord.shippingAddress.pincode})
                           </p>
                           <p>
-                            Estimated delivery: <span className="text-[#2c2420] font-medium">{ord.estimatedDelivery || "5-7 business days"}</span>
+                            Estimated delivery:{" "}
+                            <span className="text-[#2c2420] font-medium">{ord.estimatedDelivery || "5-7 business days"}</span>
                           </p>
                         </div>
                       </div>
@@ -385,7 +470,8 @@ export default function AccountPage() {
                   Track Your Package
                 </h2>
                 <p className="text-[12px] font-sans text-[#6b5e54] mb-6 text-center">
-                  Enter your Order ID received on checkout (e.g. <span className="font-semibold text-[#2c2420]">AGMUE5763X</span>) to see real-time status.
+                  Enter your Order ID received on checkout (e.g.{" "}
+                  <span className="font-semibold text-[#2c2420]">AGMUE5763X</span>) to see real-time status.
                 </p>
 
                 <form onSubmit={handleTrackOrder} className="flex gap-2">
@@ -414,30 +500,22 @@ export default function AccountPage() {
                 )}
               </div>
 
-              {/* Track Result Card */}
               {trackedOrder && (
                 <div className="bg-white border border-[#e5dfd8] p-6 sm:p-8 shadow-sm">
                   <div className="flex items-center justify-between pb-4 border-b border-[#e5dfd8] mb-6">
                     <div>
-                      <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">
-                        Order Status
-                      </span>
-                      <span className="text-[18px] font-serif font-semibold text-[#2c2420] capitalize">
-                        {trackedOrder.orderStatus}
-                      </span>
+                      <span className="text-[10px] font-sans text-[#6b5e54] uppercase tracking-wider block">Order Status</span>
+                      <span className="text-[18px] font-serif font-semibold text-[#2c2420] capitalize">{trackedOrder.orderStatus}</span>
                     </div>
                     <span
                       className={`px-3 py-1 text-[10px] font-sans font-semibold uppercase tracking-wider rounded-full ${
-                        trackedOrder.orderStatus === "delivered"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-amber-100 text-amber-800"
+                        trackedOrder.orderStatus === "delivered" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
                       }`}
                     >
                       ID: {trackedOrder.orderId}
                     </span>
                   </div>
 
-                  {/* Status Visual Timeline */}
                   <div className="mb-6 p-4 bg-[#f8f5f1]">
                     <div className="flex items-center justify-between max-w-[500px] mx-auto relative">
                       {["Confirmed", "Processing", "Shipped", "Delivered"].map((st, i) => {
@@ -465,8 +543,13 @@ export default function AccountPage() {
                       Ordered Items ({trackedOrder.items.length})
                     </h4>
                     {trackedOrder.items.map((it, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-[12px] font-sans py-1.5 border-b border-[#f0ede8] last:border-b-0">
-                        <span className="text-[#2c2420]">{it.name} (Qty: {it.quantity})</span>
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-[12px] font-sans py-1.5 border-b border-[#f0ede8] last:border-b-0"
+                      >
+                        <span className="text-[#2c2420]">
+                          {it.name} (Qty: {it.quantity})
+                        </span>
                         <span className="font-medium text-[#2c2420]">₹{(it.price * it.quantity).toLocaleString("en-IN")}</span>
                       </div>
                     ))}
@@ -474,13 +557,22 @@ export default function AccountPage() {
 
                   <div className="bg-[#fcfbfa] p-4 text-[11px] font-sans space-y-1.5 border border-[#e5dfd8]">
                     <p className="text-[#6b5e54]">
-                      Recipient: <span className="text-[#2c2420] font-medium">{trackedOrder.shippingAddress.firstName} {trackedOrder.shippingAddress.lastName}</span>
+                      Recipient:{" "}
+                      <span className="text-[#2c2420] font-medium">
+                        {trackedOrder.shippingAddress.firstName} {trackedOrder.shippingAddress.lastName}
+                      </span>
                     </p>
                     <p className="text-[#6b5e54]">
-                      Shipping Address: <span className="text-[#2c2420]">{trackedOrder.shippingAddress.address}, {trackedOrder.shippingAddress.city}, {trackedOrder.shippingAddress.state} - {trackedOrder.shippingAddress.pincode}</span>
+                      Shipping Address:{" "}
+                      <span className="text-[#2c2420]">
+                        {trackedOrder.shippingAddress.address}, {trackedOrder.shippingAddress.city},{" "}
+                        {trackedOrder.shippingAddress.state} - {trackedOrder.shippingAddress.pincode}
+                      </span>
                     </p>
                     <p className="text-[#6b5e54]">
-                      Total Paid: <span className="text-[#2c2420] font-semibold">₹{trackedOrder.total.toLocaleString("en-IN")}</span> ({trackedOrder.paymentMethod.toUpperCase()})
+                      Total Paid:{" "}
+                      <span className="text-[#2c2420] font-semibold">₹{trackedOrder.total.toLocaleString("en-IN")}</span> (
+                      {trackedOrder.paymentMethod.toUpperCase()})
                     </p>
                   </div>
                 </div>
@@ -490,8 +582,59 @@ export default function AccountPage() {
 
           {/* TAB 3: PROFILE DETAILS */}
           {activeTab === "profile" && user && (
-            <div className="max-w-[550px] mx-auto bg-white border border-[#e5dfd8] p-6 sm:p-8">
-              <h3 className="text-[18px] font-serif text-[#2c2420] mb-4">Customer Profile</h3>
+            <div className="max-w-[580px] mx-auto bg-white border border-[#e5dfd8] p-6 sm:p-8">
+              {/* Avatar upload section */}
+              <div className="flex flex-col items-center mb-8 pb-8 border-b border-[#e5dfd8]">
+                <div className="relative group mb-4">
+                  <div className="w-24 h-24 rounded-full bg-[#f8f5f1] border-2 border-[#c5a47e] overflow-hidden flex items-center justify-center">
+                    {currentAvatar ? (
+                      <Image
+                        src={currentAvatar}
+                        alt={user.name}
+                        width={96}
+                        height={96}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-[32px] font-serif text-[#2c2420]">{user.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={avatarUploading}
+                    className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                  >
+                    {avatarUploading ? (
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FiCamera className="text-white text-[20px]" />
+                    )}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="flex items-center gap-2 h-9 px-5 border border-[#c5a47e] text-[#c5a47e] text-[11px] font-sans font-medium tracking-[0.1em] uppercase hover:bg-[#c5a47e] hover:text-white transition-colors disabled:opacity-60"
+                >
+                  <FiCamera className="text-[13px]" />
+                  {avatarUploading ? "Uploading..." : currentAvatar ? "Change Photo" : "Upload Photo"}
+                </button>
+
+                <p className="text-[10px] font-sans text-[#8c7e74] mt-2 text-center">
+                  Accepted: JPG, PNG, WebP · Max 10MB · Auto-compressed & saved to Cloudinary
+                </p>
+
+                {avatarMsg && (
+                  <p className={`text-[11px] font-sans mt-2 text-center ${avatarMsg.type === "success" ? "text-green-600" : "text-red-500"}`}>
+                    {avatarMsg.type === "success" ? "✓ " : "✗ "}{avatarMsg.text}
+                  </p>
+                )}
+              </div>
+
+              {/* Profile info */}
+              <h3 className="text-[16px] font-serif text-[#2c2420] mb-4">Account Details</h3>
               <div className="space-y-4 text-[12px] font-sans">
                 <div className="flex justify-between py-2 border-b border-[#e5dfd8]">
                   <span className="text-[#6b5e54]">Full Name</span>
